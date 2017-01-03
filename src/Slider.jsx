@@ -8,32 +8,32 @@ import Steps from './Steps';
 import Marks from './Marks';
 import warning from 'warning';
 
-const noop = () => {
-};
+function noop() {
+}
 
-const isNotTouchEvent = (e) => {
+function isNotTouchEvent(e) {
   return e.touches.length > 1 || (e.type.toLowerCase() === 'touchend' && e.touches.length > 0);
-};
+}
 
-const getTouchPosition = (vertical, e) => {
+function getTouchPosition(vertical, e) {
   return vertical ? e.touches[0].clientY : e.touches[0].pageX;
-};
+}
 
-const getMousePosition = (vertical, e) => {
+function getMousePosition(vertical, e) {
   return vertical ? e.clientY : e.pageX;
-};
+}
 
-const getHandleCenterPosition = (vertical, handle) => {
+function getHandleCenterPosition(vertical, handle) {
   const coords = handle.getBoundingClientRect();
   return vertical ?
-    coords.top + (coords.height * 0.5) :
-    coords.left + (coords.width * 0.5);
-};
+  coords.top + (coords.height * 0.5) :
+  coords.left + (coords.width * 0.5);
+}
 
-const pauseEvent = (e) => {
+function pauseEvent(e) {
   e.stopPropagation();
   e.preventDefault();
-};
+}
 
 class Slider extends React.Component {
   constructor(props) {
@@ -57,10 +57,10 @@ class Slider extends React.Component {
         step && Math.floor(step) === step &&
         (max - min) % step !== 0) {
       warning(
-        false,
-        'Slider[max] - Slider[min] (%s) should be a multiple of Slider[step] (%s)',
-        max - min,
-        step
+          false,
+          'Slider[max] - Slider[min] (%s) should be a multiple of Slider[step] (%s)',
+          max - min,
+          step
       );
     }
 
@@ -69,9 +69,6 @@ class Slider extends React.Component {
       recent,
       bounds,
     };
-
-    this.onTouchStart = this.onTouchStart.bind(this);
-    this.onMouseDown = this.onMouseDown.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -289,14 +286,14 @@ class Slider extends React.Component {
     if (type === 'touch') {
       // just work for chrome iOS Safari and Android Browser
       this.onTouchMoveListener =
-        addEventListener(document, 'touchmove', this.onTouchMove.bind(this));
+          addEventListener(document, 'touchmove', this.onTouchMove.bind(this));
       this.onTouchUpListener =
-        addEventListener(document, 'touchend', this.end.bind(this, 'touch'));
+          addEventListener(document, 'touchend', this.end.bind(this, 'touch'));
     } else if (type === 'mouse') {
       this.onMouseMoveListener =
-        addEventListener(document, 'mousemove', this.onMouseMove.bind(this));
+          addEventListener(document, 'mousemove', this.onMouseMove.bind(this));
       this.onMouseUpListener =
-        addEventListener(document, 'mouseup', this.end.bind(this, 'mouse'));
+          addEventListener(document, 'mouseup', this.end.bind(this, 'mouse'));
     }
   }
 
@@ -441,7 +438,7 @@ class Slider extends React.Component {
     const {
         handle,
         bounds,
-    } = this.state;
+        } = this.state;
     const {
         className,
         prefixCls,
@@ -455,10 +452,10 @@ class Slider extends React.Component {
         marks,
         max, min,
         tipTransitionName,
+        tipAlwaysVisible,
         tipFormatter,
         children,
-        style,
-    } = this.props;
+        } = this.props;
 
     const customHandle = this.props.handle;
 
@@ -480,6 +477,7 @@ class Slider extends React.Component {
       tooltipPrefixCls,
       noTip: isNoTip,
       tipTransitionName,
+      tipAlwaysVisible,
       tipFormatter,
       vertical,
     };
@@ -490,12 +488,12 @@ class Slider extends React.Component {
       value: v,
       offset: offsets[i],
       dragging: handle === i,
-      index: i,
       key: i,
       ref: `handle-${i}`,
     }));
     if (!range) { handles.shift(); }
 
+    const isIncluded = included || range;
 
     const tracks = [];
     for (let i = 1; i < bounds.length; ++i) {
@@ -504,14 +502,9 @@ class Slider extends React.Component {
         [`${prefixCls}-track-${i}`]: true,
       });
       tracks.push(
-        <Track
-          className={trackClassName}
-          vertical={vertical}
-          included={included}
-          offset={offsets[i - 1]}
-          length={offsets[i] - offsets[i - 1]}
-          key={i}
-        />
+          <Track className={trackClassName} vertical={vertical} included={isIncluded}
+                 offset={offsets[i - 1]} length={offsets[i] - offsets[i - 1]} key={i}
+          />
       );
     }
 
@@ -524,40 +517,23 @@ class Slider extends React.Component {
     });
 
     return (
-      <div
-        ref="slider"
-        className={sliderClassName}
-        onTouchStart={disabled ? noop : this.onTouchStart}
-        onMouseDown={disabled ? noop : this.onMouseDown}
-        style={style}
-      >
-        <div className={`${prefixCls}-rail`} />
+        <div ref="slider" className={sliderClassName}
+             onTouchStart={disabled ? noop : this.onTouchStart.bind(this)}
+             onMouseDown={disabled ? noop : this.onMouseDown.bind(this)}
+        >
+          <div className={`${prefixCls}-rail`} />
           {tracks}
-        <Steps
-          prefixCls={prefixCls}
-          vertical = {vertical}
-          marks={marks}
-          dots={dots}
-          step={step}
-          included={included}
-          lowerBound={bounds[0]}
-          upperBound={bounds[bounds.length - 1]}
-          max={max}
-          min={min}
-        />
+          <Steps prefixCls={prefixCls} vertical = {vertical} marks={marks} dots={dots} step={step}
+                 included={isIncluded} lowerBound={bounds[0]}
+                 upperBound={bounds[bounds.length - 1]} max={max} min={min}
+          />
           {handles}
-        <Marks
-          className={`${prefixCls}-mark`}
-          vertical={vertical}
-          marks={marks}
-          included={included}
-          lowerBound={bounds[0]}
-          upperBound={bounds[bounds.length - 1]}
-          max={max}
-          min={min}
-        />
+          <Marks className={`${prefixCls}-mark`} vertical = {vertical} marks={marks}
+                 included={isIncluded} lowerBound={bounds[0]}
+                 upperBound={bounds[bounds.length - 1]} max={max} min={min}
+          />
           {children}
-      </div>
+        </div>
     );
   }
 }
@@ -586,6 +562,7 @@ Slider.propTypes = {
   onAfterChange: React.PropTypes.func,
   handle: React.PropTypes.element,
   tipTransitionName: React.PropTypes.string,
+  tipAlwaysVisible: React.PropTypes.bool,
   tipFormatter: React.PropTypes.func,
   dots: React.PropTypes.bool,
   range: React.PropTypes.oneOfType([
@@ -598,13 +575,13 @@ Slider.propTypes = {
     React.PropTypes.bool,
     React.PropTypes.number,
   ]),
-  style: React.PropTypes.object,
 };
 
 Slider.defaultProps = {
   prefixCls: 'rc-slider',
   className: '',
   tipTransitionName: '',
+  tipAlwaysVisible: false,
   min: 0,
   max: 100,
   step: 1,
